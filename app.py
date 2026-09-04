@@ -1,15 +1,20 @@
-import streamlit as st
-from content_generation_crew import ContentGenerationCrew
 import time
 from datetime import datetime
-import markdown
+
+import streamlit as st
+
+from content_generation_crew import ContentGenerationCrew
 
 st.set_page_config(
     page_title="QuantumContent | Autonomous Editorial Suite", page_icon="🔮", layout="wide"
 )
 
-# Authentication Check
-from auth import check_authentication
+# Authentication check.
+#
+# The import sits below st.set_page_config on purpose: Streamlit requires that
+# call to be the first Streamlit command executed, and auth.py renders widgets.
+# The suppression below marks the ordering as deliberate, not accidental.
+from auth import check_authentication  # noqa: E402
 
 if not check_authentication():
     st.stop()
@@ -286,7 +291,7 @@ with st.container():
                 )
 
             except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+                st.error(f"An error occurred: {e!s}")
                 st.exception(e)
     st.markdown("</div>", unsafe_allow_html=True)
 

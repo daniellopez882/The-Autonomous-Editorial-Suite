@@ -1,7 +1,5 @@
-import sqlite3
 import hashlib
-from datetime import datetime
-from typing import List, Dict
+import sqlite3
 
 
 class ContentVersionControl:
@@ -35,7 +33,9 @@ class ContentVersionControl:
             )
             result = cursor.fetchone()
             new_version = (result[0] or 0) + 1
-            content_hash = hashlib.md5(content.encode()).hexdigest()
+            # sha256, not md5. This is a change-detection hash rather than a
+            # security boundary, but md5 invites the question on every read.
+            content_hash = hashlib.sha256(content.encode()).hexdigest()
             cursor.execute(
                 """
             INSERT INTO content_versions (content_id, version, content, content_hash, word_count)
@@ -46,7 +46,7 @@ class ContentVersionControl:
             conn.commit()
         return new_version
 
-    def get_history(self, content_id: str) -> List[Dict]:
+    def get_history(self, content_id: str) -> list[dict]:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(

@@ -18,3 +18,6 @@ ignore = ["E501", "B008"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106"]
+# Manual smoke-test scripts. Asserts are how they report, and verify_imports.py
+# imports names precisely to check that importing them works.
+"scripts/**" = ["S101", "F401", "T201", "I001"]

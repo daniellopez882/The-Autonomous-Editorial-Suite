@@ -1,6 +1,6 @@
-from datetime import datetime
-import sys
 import os
+import sys
+from datetime import datetime
 
 
 def log_progress(message):

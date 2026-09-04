@@ -1,9 +1,10 @@
 import os
-from typing import List, Dict
-from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
-from custom_tools import search_tool
+
+from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+
+from custom_tools import search_tool
 from logger import log_progress
 
 # Load environment variables
@@ -36,7 +37,7 @@ class ContentGenerationCrew:
         self.agents = self._create_agents()
         log_progress("ContentGenerationCrew initialized.")
 
-    def _create_agents(self) -> Dict[str, Agent]:
+    def _create_agents(self) -> dict[str, Agent]:
         """Create specialized content agents"""
 
         log_progress("Creating agents...")
@@ -146,7 +147,7 @@ class ContentGenerationCrew:
 
     def _create_tasks(
         self, topic: str, content_type: str = "blog_post", tone: str = "Professional"
-    ) -> List[Task]:
+    ) -> list[Task]:
         """Create content generation tasks"""
 
         agents = self.agents
@@ -253,7 +254,7 @@ class ContentGenerationCrew:
 
         # Task 7: Viral Catalyst (New Feature)
         viral_catalyst_task = Task(
-            description=f"""
+            description="""
             Create a "Viral Catalyst Pack" for the generated content.
             This should include:
             1. 3 Magnetic Titles with high CTR potential.
@@ -284,7 +285,7 @@ class ContentGenerationCrew:
 
     def generate_content(
         self, topic: str, content_type: str = "blog_post", tone: str = "Professional"
-    ) -> Dict:
+    ) -> dict:
         """
         Generate content using the multi-agent crew
         """
