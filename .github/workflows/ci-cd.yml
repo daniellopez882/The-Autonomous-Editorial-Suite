@@ -40,8 +40,11 @@ jobs:
       - name: Ruff lint
         run: ruff check . --output-format=github
 
-      - name: Black formatting
-        run: black --check .
+      - name: Formatting
+        # ruff format, not black. Both were configured and they disagree across
+        # versions -- CI went red on a file that was clean locally because the
+        # pinned black major differed from the one installed for development.
+        run: ruff format --check .
 
       - name: Tests
         # No continue-on-error: a failing suite fails the build.
