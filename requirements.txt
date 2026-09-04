@@ -1,13 +1,24 @@
-crewai
-langchain-openai
-streamlit
-duckduckgo-search
-crewai_tools
-python-dotenv
-markdown
-pydantic
-pytest
-# For scraping if needed later
-beautifulsoup4
-streamlit-authenticator
-PyYAML
+# Runtime dependencies. Dev and test tooling is in requirements-dev.txt.
+#
+# The previous file listed 13 bare package names with no constraints, so two
+# installs a week apart could resolve to different major versions and a
+# dependency audit could not say what was actually running.
+
+# ---- Agent framework --------------------------------------------------------
+crewai>=0.28,<2.0
+crewai-tools>=0.1,<2.0
+langchain-openai>=0.1,<2.0
+
+# ---- UI ---------------------------------------------------------------------
+streamlit>=1.32,<2.0
+streamlit-authenticator>=0.3,<0.5
+
+# ---- Tools ------------------------------------------------------------------
+duckduckgo-search>=6.0,<9.0
+beautifulsoup4>=4.12,<5.0
+markdown>=3.5,<4.0
+
+# ---- Configuration ----------------------------------------------------------
+python-dotenv>=1.0,<2.0
+pydantic>=2.7,<3.0
+PyYAML>=6.0,<7.0
