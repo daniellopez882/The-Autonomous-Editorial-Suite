@@ -73,14 +73,20 @@ jobs:
             exit 1
           fi
 
-      - name: No committed signing key may return
-        # The auth cookie was signed with a value committed to this repo.
+      - name: No committed signing key may be used as a default
+        # The auth cookie used to be signed with a value committed to this repo.
+        #
+        # Matches the placeholder being *used* as a getenv default, not merely
+        # named. auth.py defines it as the constant to reject and the tests
+        # assert against it; an earlier, looser pattern also matched this
+        # workflow file itself.
         run: |
-          hits=$(grep -rIn --exclude-dir=.git --exclude-dir=.venv --exclude-dir=tests \
-                   --exclude=auth.py -E 'some_random_secret_key' . || true)
+          hits=$(grep -rIn --exclude-dir=.git --exclude-dir=.venv \
+                   --exclude-dir=.github --exclude-dir=tests --exclude=auth.py \
+                   -E 'getenv\([^)]*,[[:space:]]*"[^"]*secret[^"]*"\)' . || true)
           if [ -n "$hits" ]; then
             echo "$hits"
-            echo "::error::a hardcoded auth signing key is present"
+            echo "::error::a hardcoded signing key is being used as a default"
             exit 1
           fi
           echo "clean"
