@@ -107,6 +107,28 @@ def _resolve_password() -> str:
     return password or "admin"
 
 
+def _hash_password(password: str) -> str:
+    """
+    Hash a password with whichever streamlit-authenticator API is installed.
+
+    The original call was ``stauth.Hasher([password]).generate()[0]``. That is
+    the 0.3.x API; in 0.4.x ``Hasher.__init__`` takes no arguments and hashing
+    moved to ``Hasher.hash``, so the call raises
+
+        TypeError: Hasher.__init__() takes 1 positional argument but 2 were given
+
+    The dependency was unpinned, so which API you got depended on when you
+    installed. Both are handled, and the range is pinned.
+    """
+    hasher = stauth.Hasher
+    if hasattr(hasher, "hash"):
+        try:
+            return hasher.hash(password)  # 0.4.x static form
+        except TypeError:
+            return hasher().hash(password)  # 0.4.x instance form
+    return hasher([password]).generate()[0]  # 0.3.x
+
+
 def get_auth_config_from_env() -> dict:
     """
     Build the authenticator configuration from environment variables.
@@ -118,7 +140,7 @@ def get_auth_config_from_env() -> dict:
     password = _resolve_password()
     secret_key = _resolve_secret_key()
 
-    hashed = stauth.Hasher([password]).generate()[0]
+    hashed = _hash_password(password)
 
     return {
         "credentials": {
