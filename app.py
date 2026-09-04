@@ -5,18 +5,18 @@ from datetime import datetime
 import markdown
 
 st.set_page_config(
-    page_title="QuantumContent | Autonomous Editorial Suite",
-    page_icon="🔮",
-    layout="wide"
+    page_title="QuantumContent | Autonomous Editorial Suite", page_icon="🔮", layout="wide"
 )
 
 # Authentication Check
 from auth import check_authentication
+
 if not check_authentication():
     st.stop()
 
 # Custom CSS for Ultra-Premium Look
-st.markdown("""
+st.markdown(
+    """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
     
@@ -120,16 +120,23 @@ st.markdown("""
         border: 1px solid var(--glass-border) !important;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 # Initialize crew
 @st.cache_resource
 def get_crew():
     return ContentGenerationCrew()
 
+
 # Header Section
 st.markdown('<p class="main-header">QuantumContent 🔮</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-text">Next-Gen Autonomous Editorial Pipeline & Content Forge</p>', unsafe_allow_html=True)
+st.markdown(
+    '<p class="sub-text">Next-Gen Autonomous Editorial Pipeline & Content Forge</p>',
+    unsafe_allow_html=True,
+)
 
 # Sidebar
 with st.sidebar:
@@ -140,11 +147,12 @@ with st.sidebar:
         "Editor": ("📝", "Refinement master"),
         "Fact Checker": ("✅", "Accuracy scout"),
         "SEO Guru": ("📈", "Search optimizer"),
-        "Viral Catalyst": ("🚀", "Engagement genius")
+        "Viral Catalyst": ("🚀", "Engagement genius"),
     }
-    
+
     for agent, (icon, role) in agents_info.items():
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="agent-card">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.5rem;">{icon}</span>
@@ -154,23 +162,38 @@ with st.sidebar:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 # Main UI
 with st.container():
     st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
     col1, col2, col3 = st.columns([2, 1, 1])
-    
+
     with col1:
-        topic = st.text_input("🎯 Central Topic / Research Goal", placeholder="e.g., The Future of Sustainable Energy")
-    
+        topic = st.text_input(
+            "🎯 Central Topic / Research Goal", placeholder="e.g., The Future of Sustainable Energy"
+        )
+
     with col2:
-        content_type = st.selectbox("📄 Format", 
-                                  ["Blog Post", "Research Report", "Technical Article", "Newsletter", "Whitepaper"])
-    
+        content_type = st.selectbox(
+            "📄 Format",
+            ["Blog Post", "Research Report", "Technical Article", "Newsletter", "Whitepaper"],
+        )
+
     with col3:
-        tone = st.selectbox("🎭 Narrative Tone", 
-                          ["Professional", "Conversational", "Academic", "Humorous", "Inspirational", "Aggressive"])
+        tone = st.selectbox(
+            "🎭 Narrative Tone",
+            [
+                "Professional",
+                "Conversational",
+                "Academic",
+                "Humorous",
+                "Inspirational",
+                "Aggressive",
+            ],
+        )
 
     if st.button("🚀 IGNITE PIPELINE"):
         if not topic:
@@ -178,92 +201,101 @@ with st.container():
         else:
             try:
                 crew = get_crew()
-                
+
                 with st.status("🎬 Orchestrating Agents...", expanded=True) as status:
                     st.write("🔍 Researcher is scouring the web...")
-                    
+
                     start_time = time.time()
                     result = crew.generate_content(topic, content_type, tone)
                     end_time = time.time()
-                    
+
                     status.update(label="✅ Pipeline Succeeded!", state="complete", expanded=False)
-                
+
                 # Results Display
                 st.success(f"Generated successfully in {end_time - start_time:.1f} seconds!")
-                
+
                 # Score the content
                 from quality_scorer import ContentQualityScorer
+
                 scorer = ContentQualityScorer()
                 quality_results = scorer.score_content(result["article_body"], topic)
-                
+
                 # Save Version
                 from content_versioning import ContentVersionControl
+
                 vc = ContentVersionControl()
                 version_id = vc.save_version(topic, result["article_body"])
-                
-                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-                    "📄 Article", 
-                    "🚀 Viral Catalyst",
-                    "📊 Intelligence Stats", 
-                    "⭐ Quality Audit", 
-                    "📜 History",
-                    "🛠️ Markdown"
-                ])
-                
+
+                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+                    [
+                        "📄 Article",
+                        "🚀 Viral Catalyst",
+                        "📊 Intelligence Stats",
+                        "⭐ Quality Audit",
+                        "📜 History",
+                        "🛠️ Markdown",
+                    ]
+                )
+
                 with tab1:
                     st.markdown(f"### Tone: {tone}")
                     st.markdown(result["article_body"])
-                    
+
                 with tab2:
                     st.markdown("### ⚡ Viral Catalyst Pack")
-                    st.info("These hooks and posts are designed to maximize engagement on social platforms.")
-                    st.markdown(result["final_content"]) # This contains the viral pack
-                
+                    st.info(
+                        "These hooks and posts are designed to maximize engagement on social platforms."
+                    )
+                    st.markdown(result["final_content"])  # This contains the viral pack
+
                 with tab3:
                     cols = st.columns(3)
                     cols[0].metric("Brain Power", f"{result['agents_used']} Agents")
                     cols[1].metric("Cognitive Steps", result["tasks_completed"])
                     cols[2].metric("Complexity Index", "High")
-                
+
                 with tab4:
                     st.markdown(f"### Overall Grade: **{quality_results['grade']}**")
-                    st.progress(quality_results['overall_score'] / 100)
+                    st.progress(quality_results["overall_score"] / 100)
                     st.metric("Quality Score", f"{quality_results['overall_score']}/100")
-                    
+
                     st.markdown("#### Precision Metrics")
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Readability", quality_results['scores']['readability'])
-                    c2.metric("Structure", quality_results['scores']['structure'])
-                    c3.metric("Engagement", quality_results['scores']['engagement'])
-                    
+                    c1.metric("Readability", quality_results["scores"]["readability"])
+                    c2.metric("Structure", quality_results["scores"]["structure"])
+                    c3.metric("Engagement", quality_results["scores"]["engagement"])
+
                     st.markdown("#### Strategic Recommendations")
-                    for rec in quality_results['recommendations']:
+                    for rec in quality_results["recommendations"]:
                         st.info(rec)
-                
+
                 with tab5:
                     st.markdown("### Version History")
                     history = vc.get_history(topic)
                     st.table(history)
-                
+
                 with tab6:
                     st.code(result["article_body"], language="markdown")
-                    
+
                 # Download
                 st.download_button(
                     label="📥 Export as Markdown",
                     data=result["article_body"],
                     file_name=f"quantum_content_{datetime.now().strftime('%Y%m%d')}.md",
-                    mime="text/markdown"
+                    mime="text/markdown",
                 )
-                
+
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
                 st.exception(e)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("""
+st.markdown(
+    """
 <div style="text-align: center; color: #94a3b8; font-size: 0.9rem;">
     Powered by <strong>QuantumEngine</strong> & CrewAI • Developed with ❤️ for High-Impact Content
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

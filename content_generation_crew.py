@@ -23,26 +23,27 @@ deepseek_llm = ChatOpenAI(
     openai_api_key=api_key,
     openai_api_base="https://api.deepseek.com/v1",
     temperature=0.7,
-    max_tokens=4000
+    max_tokens=4000,
 )
+
 
 class ContentGenerationCrew:
     """Multi-agent content generation system"""
-    
+
     def __init__(self):
         log_progress("Initializing ContentGenerationCrew...")
         self.llm = deepseek_llm
         self.agents = self._create_agents()
         log_progress("ContentGenerationCrew initialized.")
-        
+
     def _create_agents(self) -> Dict[str, Agent]:
         """Create specialized content agents"""
-        
+
         log_progress("Creating agents...")
         # 1. Research Analyst
         researcher = Agent(
-            role='Senior Research Analyst',
-            goal='Discover accurate, current information and credible sources on any topic',
+            role="Senior Research Analyst",
+            goal="Discover accurate, current information and credible sources on any topic",
             backstory="""You are an expert research analyst with a PhD in Information Science.
             You have 15 years of experience in investigative research and fact-finding.
             You excel at finding authoritative sources, verifying information, and 
@@ -52,13 +53,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 2. Content Writer
         writer = Agent(
-            role='Expert Content Writer',
-            goal='Create engaging, well-structured content that captivates readers',
+            role="Expert Content Writer",
+            goal="Create engaging, well-structured content that captivates readers",
             backstory="""You are an award-winning content writer with a background in 
             journalism and creative writing. You've written for top publications like 
             Medium, TechCrunch, and The Atlantic. Your writing is clear, engaging, and 
@@ -68,13 +69,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 3. Senior Editor
         editor = Agent(
-            role='Senior Content Editor',
-            goal='Refine content to perfection through editing and structural improvements',
+            role="Senior Content Editor",
+            goal="Refine content to perfection through editing and structural improvements",
             backstory="""You are a meticulous editor with 20 years of experience in 
             publishing. You've edited content for major media outlets and have a keen eye 
             for clarity, flow, and impact. You improve structure, enhance readability, 
@@ -83,13 +84,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 4. Fact Checker
         fact_checker = Agent(
-            role='Professional Fact Checker',
-            goal='Verify all claims, statistics, and assertions in content',
+            role="Professional Fact Checker",
+            goal="Verify all claims, statistics, and assertions in content",
             backstory="""You are a professional fact-checker who worked for major news 
             organizations. You have an obsessive attention to detail and never let false 
             information slip through. You verify every claim, cross-reference sources, 
@@ -99,13 +100,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 5. SEO Specialist
         seo_specialist = Agent(
-            role='SEO Optimization Expert',
-            goal='Optimize content for search engines while maintaining quality and readability',
+            role="SEO Optimization Expert",
+            goal="Optimize content for search engines while maintaining quality and readability",
             backstory="""You are an SEO expert with deep knowledge of search engine 
             algorithms, keyword research, and content optimization. You've helped dozens 
             of websites rank #1 for competitive keywords. You optimize headlines, meta 
@@ -114,13 +115,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 6. Creative Catalyst (New Unique Feature)
         creative_catalyst = Agent(
-            role='Creative Content Catalyst',
-            goal='Transform long-form content into viral social hooks and visual prompts',
+            role="Creative Content Catalyst",
+            goal="Transform long-form content into viral social hooks and visual prompts",
             backstory="""You are a viral marketing genius who knows exactly how to make 
             content explode on social media. You have a background in psychological 
             marketing and have managed accounts with millions of followers. You excel 
@@ -130,24 +131,26 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=True,
-            memory=False
+            memory=False,
         )
-        
+
         log_progress("All agents created.")
         return {
-            'researcher': researcher,
-            'writer': writer,
-            'editor': editor,
-            'fact_checker': fact_checker,
-            'seo_specialist': seo_specialist,
-            'creative_catalyst': creative_catalyst
+            "researcher": researcher,
+            "writer": writer,
+            "editor": editor,
+            "fact_checker": fact_checker,
+            "seo_specialist": seo_specialist,
+            "creative_catalyst": creative_catalyst,
         }
-    
-    def _create_tasks(self, topic: str, content_type: str = "blog_post", tone: str = "Professional") -> List[Task]:
+
+    def _create_tasks(
+        self, topic: str, content_type: str = "blog_post", tone: str = "Professional"
+    ) -> List[Task]:
         """Create content generation tasks"""
-        
+
         agents = self.agents
-        
+
         # Task 1: Research
         research_task = Task(
             description=f"""
@@ -171,9 +174,9 @@ class ContentGenerationCrew:
             expected_output="""
             A comprehensive research report in markdown format.
             """,
-            agent=agents['researcher']
+            agent=agents["researcher"],
         )
-        
+
         # Task 2: Content Outlining
         outline_task = Task(
             description=f"""
@@ -191,10 +194,10 @@ class ContentGenerationCrew:
             expected_output="""
             A detailed content outline.
             """,
-            agent=agents['writer'],
-            context=[research_task]
+            agent=agents["writer"],
+            context=[research_task],
         )
-        
+
         # Task 3: Content Writing
         write_task = Task(
             description=f"""
@@ -207,10 +210,10 @@ class ContentGenerationCrew:
             expected_output="""
             A complete, polished article in markdown format.
             """,
-            agent=agents['writer'],
-            context=[research_task, outline_task]
+            agent=agents["writer"],
+            context=[research_task, outline_task],
         )
-        
+
         # Task 4: Editing
         edit_task = Task(
             description=f"""
@@ -219,10 +222,10 @@ class ContentGenerationCrew:
             expected_output="""
             Edited article with editorial notes.
             """,
-            agent=agents['editor'],
-            context=[write_task]
+            agent=agents["editor"],
+            context=[write_task],
         )
-        
+
         # Task 5: Fact Checking
         fact_check_task = Task(
             description="""
@@ -231,10 +234,10 @@ class ContentGenerationCrew:
             expected_output="""
             Detailed Fact-Check Report.
             """,
-            agent=agents['fact_checker'],
-            context=[edit_task]
+            agent=agents["fact_checker"],
+            context=[edit_task],
         )
-        
+
         # Task 6: SEO Optimization
         seo_task = Task(
             description=f"""
@@ -244,8 +247,8 @@ class ContentGenerationCrew:
             expected_output="""
             SEO Optimization Report and the Final Optimized Content.
             """,
-            agent=agents['seo_specialist'],
-            context=[edit_task, fact_check_task]
+            agent=agents["seo_specialist"],
+            context=[edit_task, fact_check_task],
         )
 
         # Task 7: Viral Catalyst (New Feature)
@@ -265,10 +268,10 @@ class ContentGenerationCrew:
             - LinkedIn Post
             - Image Prompt
             """,
-            agent=agents['creative_catalyst'],
-            context=[seo_task]
+            agent=agents["creative_catalyst"],
+            context=[seo_task],
         )
-        
+
         return [
             research_task,
             outline_task,
@@ -276,50 +279,45 @@ class ContentGenerationCrew:
             edit_task,
             fact_check_task,
             seo_task,
-            viral_catalyst_task
+            viral_catalyst_task,
         ]
-    
+
     def generate_content(
-        self,
-        topic: str,
-        content_type: str = "blog_post",
-        tone: str = "Professional"
+        self, topic: str, content_type: str = "blog_post", tone: str = "Professional"
     ) -> Dict:
         """
         Generate content using the multi-agent crew
         """
-        
+
         log_progress(f"🚀 Starting content generation for: {topic} (Tone: {tone})")
-        
+
         # Create tasks
         tasks = self._create_tasks(topic, content_type, tone)
         log_progress(f"Tasks created. Number of tasks: {len(tasks)}")
-        
+
         # Create crew
         crew = Crew(
-            agents=list(self.agents.values()),
-            tasks=tasks,
-            process=Process.sequential,
-            verbose=True
+            agents=list(self.agents.values()), tasks=tasks, process=Process.sequential, verbose=True
         )
-        
+
         # Execute crew
         log_progress("Executing crew.kickoff()...")
         result = crew.kickoff()
         log_progress("crew.kickoff() finished successfully.")
-        
+
         # Extract individual task outputs if needed, but result usually contains the final one.
         # CrewAI result is the output of the last task.
-        
+
         return {
-            "final_content": str(result), # This will be the Viral Pack since it's the last task
-            "article_body": str(tasks[5].output), # SEO optimized article
+            "final_content": str(result),  # This will be the Viral Pack since it's the last task
+            "article_body": str(tasks[5].output),  # SEO optimized article
             "topic": topic,
             "content_type": content_type,
             "tone": tone,
             "agents_used": len(self.agents),
-            "tasks_completed": len(tasks)
+            "tasks_completed": len(tasks),
         }
+
 
 if __name__ == "__main__":
     content_crew = ContentGenerationCrew()
