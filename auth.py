@@ -157,19 +157,47 @@ def get_auth_config_from_env() -> dict:
             "key": secret_key,
             "expiry_days": COOKIE_EXPIRY_DAYS,
         },
-        "pre-authorized": {"emails": []},
+    }
+
+
+def validate_configuration() -> dict:
+    """
+    Check the authentication configuration without rendering anything.
+
+    ``check_authentication`` fails closed, but only when a page renders; a
+    container whose process is up and whose health check says "ok" while
+    every request shows a configuration error is not a healthy deployment.
+    ``preflight.py`` calls this before Streamlit starts and exits non-zero on
+    ``AuthConfigurationError``.
+    """
+    enabled = auth_enabled()
+    if enabled:
+        _resolve_secret_key()
+        _resolve_password()
+    return {
+        "production": is_production(),
+        "auth_enabled": enabled,
+        "username": os.getenv("APP_USERNAME", "admin"),
     }
 
 
 def build_authenticator(config: dict | None = None) -> stauth.Authenticate:
-    """Construct the authenticator. Separated so it can be tested."""
+    """
+    Construct the authenticator. Separated so it can be tested.
+
+    The fifth positional argument (``pre_authorized``) is gone: 0.4.x raises
+    ``DeprecationError`` when it is passed, and the pinned range resolves to
+    0.4.x on a fresh install. Booting the container showed the login page
+    replaced by that traceback -- the suite had never constructed the
+    authenticator. 0.3.x treats the argument as optional, so omitting it is
+    right for both.
+    """
     config = config or get_auth_config_from_env()
     return stauth.Authenticate(
         config["credentials"],
         config["cookie"]["name"],
         config["cookie"]["key"],
         config["cookie"]["expiry_days"],
-        config["pre-authorized"],
     )
 
 

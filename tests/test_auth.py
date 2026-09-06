@@ -124,7 +124,7 @@ class TestConfigShape:
 
     def test_config_carries_every_key_the_authenticator_needs(self, auth):
         config = auth.get_auth_config_from_env()
-        assert set(config) == {"credentials", "cookie", "pre-authorized"}
+        assert set(config) == {"credentials", "cookie"}
         assert set(config["cookie"]) == {"name", "key", "expiry_days"}
 
 
