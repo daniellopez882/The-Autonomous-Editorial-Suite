@@ -3,11 +3,9 @@ from datetime import datetime
 
 import streamlit as st
 
-from content_generation_crew import ContentGenerationCrew
+from llm import LLMNotConfigured
 
-st.set_page_config(
-    page_title="QuantumContent | Autonomous Editorial Suite", page_icon="🔮", layout="wide"
-)
+st.set_page_config(page_title="Editorial Suite", page_icon="✍️", layout="wide")
 
 # Authentication check.
 #
@@ -130,16 +128,23 @@ st.markdown(
 )
 
 
-# Initialize crew
+# Initialize crew.
+#
+# Imported here rather than at the top of the script: the crew module pulls in
+# CrewAI and the model client, and building the client needs DEEPSEEK_API_KEY.
+# Doing that at import meant a deployment without the key showed a traceback
+# instead of the login form.
 @st.cache_resource
 def get_crew():
+    from content_generation_crew import ContentGenerationCrew
+
     return ContentGenerationCrew()
 
 
 # Header Section
-st.markdown('<p class="main-header">QuantumContent 🔮</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-header">Editorial Suite</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="sub-text">Next-Gen Autonomous Editorial Pipeline & Content Forge</p>',
+    '<p class="sub-text">Six agents, one model, a draft for you to review</p>',
     unsafe_allow_html=True,
 )
 
@@ -200,12 +205,16 @@ with st.container():
             ],
         )
 
-    if st.button("🚀 IGNITE PIPELINE"):
+    if st.button("Generate draft"):
         if not topic:
             st.error("Please enter a topic.")
         else:
             try:
-                crew = get_crew()
+                try:
+                    crew = get_crew()
+                except LLMNotConfigured as exc:
+                    st.error(str(exc))
+                    st.stop()
 
                 with st.status("🎬 Orchestrating Agents...", expanded=True) as status:
                     st.write("🔍 Researcher is scouring the web...")
@@ -233,12 +242,12 @@ with st.container():
 
                 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
                     [
-                        "📄 Article",
-                        "🚀 Viral Catalyst",
-                        "📊 Intelligence Stats",
-                        "⭐ Quality Audit",
-                        "📜 History",
-                        "🛠️ Markdown",
+                        "Article",
+                        "Social pack",
+                        "Run stats",
+                        "Quality score",
+                        "History",
+                        "Markdown",
                     ]
                 )
 
@@ -247,30 +256,29 @@ with st.container():
                     st.markdown(result["article_body"])
 
                 with tab2:
-                    st.markdown("### ⚡ Viral Catalyst Pack")
-                    st.info(
-                        "These hooks and posts are designed to maximize engagement on social platforms."
-                    )
+                    st.markdown("### Social media pack")
+                    st.info("Threads and posts drafted from the article. Read them before posting.")
                     st.markdown(result["final_content"])  # This contains the viral pack
 
                 with tab3:
-                    cols = st.columns(3)
-                    cols[0].metric("Brain Power", f"{result['agents_used']} Agents")
-                    cols[1].metric("Cognitive Steps", result["tasks_completed"])
-                    cols[2].metric("Complexity Index", "High")
+                    # "Complexity Index: High" used to be shown here as a constant.
+                    # These two are counts from the run.
+                    cols = st.columns(2)
+                    cols[0].metric("Agents", result["agents_used"])
+                    cols[1].metric("Tasks", result["tasks_completed"])
 
                 with tab4:
                     st.markdown(f"### Overall Grade: **{quality_results['grade']}**")
                     st.progress(quality_results["overall_score"] / 100)
                     st.metric("Quality Score", f"{quality_results['overall_score']}/100")
 
-                    st.markdown("#### Precision Metrics")
+                    st.markdown("#### Dimensions")
                     c1, c2, c3 = st.columns(3)
                     c1.metric("Readability", quality_results["scores"]["readability"])
                     c2.metric("Structure", quality_results["scores"]["structure"])
                     c3.metric("Engagement", quality_results["scores"]["engagement"])
 
-                    st.markdown("#### Strategic Recommendations")
+                    st.markdown("#### Recommendations")
                     for rec in quality_results["recommendations"]:
                         st.info(rec)
 

@@ -1,31 +1,17 @@
-import os
-
 from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 
 from custom_tools import search_tool
+from llm import build_llm
 from logger import log_progress
 
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("DEEPSEEK_API_KEY")
-
-# Set OPENAI_API_KEY for compatibility with LangChain's ChatOpenAI
-if api_key:
-    os.environ["OPENAI_API_KEY"] = api_key
-else:
-    log_progress("WARNING: DEEPSEEK_API_KEY not found in .env")
-
-# Configure DeepSeek LLM
-deepseek_llm = ChatOpenAI(
-    model="deepseek-chat",
-    openai_api_key=api_key,
-    openai_api_base="https://api.deepseek.com/v1",
-    temperature=0.7,
-    max_tokens=4000,
-)
+# The model client used to be built here, at import time, with whatever
+# DEEPSEEK_API_KEY held -- and with it unset, ChatOpenAI raised at import, so
+# app.py could not even render its login form. It is built in __init__ now,
+# through llm.build_llm, which raises LLMNotConfigured with an instruction.
 
 
 class ContentGenerationCrew:
@@ -33,7 +19,7 @@ class ContentGenerationCrew:
 
     def __init__(self):
         log_progress("Initializing ContentGenerationCrew...")
-        self.llm = deepseek_llm
+        self.llm = build_llm()
         self.agents = self._create_agents()
         log_progress("ContentGenerationCrew initialized.")
 
