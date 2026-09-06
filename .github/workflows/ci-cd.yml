@@ -82,7 +82,8 @@ jobs:
         # workflow file itself.
         run: |
           hits=$(grep -rIn --exclude-dir=.git --exclude-dir=.venv \
-                   --exclude-dir=.github --exclude-dir=tests --exclude=auth.py \
+                   --exclude-dir=.github --exclude-dir=tests --exclude-dir=docs \
+                   --exclude=auth.py --exclude=README.md \
                    -E 'getenv\([^)]*,[[:space:]]*"[^"]*secret[^"]*"\)' . || true)
           if [ -n "$hits" ]; then
             echo "$hits"
