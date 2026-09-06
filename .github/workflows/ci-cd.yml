@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install -r requirements-dev.txt pip-audit
 
       - name: Ruff lint
         run: ruff check . --output-format=github
@@ -92,8 +92,10 @@ jobs:
           echo "clean"
 
       - name: Bandit
-        run: bandit -r . -x ./tests,./.venv -ll -f screen
-        continue-on-error: true
+        run: bandit -q -r . -x ./tests,./.venv -ll
+
+      - name: Dependency audit
+        run: pip-audit --progress-spinner off
 
   docker:
     name: Docker build
@@ -112,3 +114,45 @@ jobs:
           tags: editorial-suite:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Production start without a password is refused
+        # The entrypoint runs preflight.py before streamlit. This is the case
+        # the login gate used to accept: admin / admin.
+        run: |
+          if docker run --rm --entrypoint python -e ENVIRONMENT=production -e APP_SECRET_KEY=ci-secret-not-real editorial-suite:ci preflight.py; then
+            echo "::error::a production start without APP_PASSWORD was accepted"; exit 1
+          fi
+          echo "refused, as it should be"
+
+      - name: Container boots and serves its health check
+        run: |
+          docker run -d --name es-ci -p 8501:8501 \
+            -e ENVIRONMENT=production -e APP_SECRET_KEY=ci-secret-not-real -e APP_PASSWORD=ci-password-not-real \
+            editorial-suite:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8501/_stcore/health >/dev/null 2>&1; then
+              echo "healthy after ${i}s"; curl -fsS http://localhost:8501/_stcore/health; echo; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::container never became healthy"; docker logs es-ci; exit 1
+
+      - name: The login page renders, not a traceback
+        # Without DEEPSEEK_API_KEY the old app died importing the crew. The
+        # Streamlit shell must be served and the process must still be running.
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8501/)
+          echo "GET / -> $code"
+          [ "$code" = "200" ] || exit 1
+          docker logs es-ci 2>&1 | grep -qi "traceback" && { echo "::error::the app logged a traceback at startup"; docker logs es-ci; exit 1; } || true
+          docker logs es-ci 2>&1 | grep -q "preflight: production; authentication enabled" || { echo "::error::preflight did not run"; docker logs es-ci; exit 1; }
+
+      - name: Image does not run as root
+        run: |
+          uid=$(docker run --rm --entrypoint sh editorial-suite:ci -c 'id -u')
+          echo "runs as uid $uid"
+          [ "$uid" != "0" ] || { echo "::error::image runs as root"; exit 1; }
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f es-ci || true
