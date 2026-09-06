@@ -1,18 +1,21 @@
-version: '3.8'
-
+# The previous file passed only DEEPSEEK_API_KEY. The image now runs with
+# ENVIRONMENT=production, whose preflight refuses to start without a real
+# cookie signing key and password -- the two values the old app defaulted to a
+# committed string and "admin".
 services:
-  ai-content-pipeline:
+  editorial-suite:
     build: .
     ports:
       - "8501:8501"
     environment:
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      # Required. Generate the key with:
+      #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+      APP_SECRET_KEY: ${APP_SECRET_KEY:?set APP_SECRET_KEY in .env or the shell}
+      APP_PASSWORD: ${APP_PASSWORD:?set APP_PASSWORD in .env or the shell}
+      APP_USERNAME: ${APP_USERNAME:-admin}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      # Optional at start; every generation attempt is refused until it is set.
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
     volumes:
       - ./generated_content:/app/generated_content
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8501/_stcore/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s

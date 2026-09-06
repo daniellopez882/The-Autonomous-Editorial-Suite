@@ -2,10 +2,12 @@ import pytest
 from content_generation_crew import ContentGenerationCrew
 from quality_scorer import ContentQualityScorer
 
+
 def test_crew_initialization():
     crew = ContentGenerationCrew()
     assert crew.llm is not None
     assert len(crew.agents) == 5
+
 
 def test_quality_scorer():
     scorer = ContentQualityScorer()
@@ -14,6 +16,7 @@ def test_quality_scorer():
     assert "overall_score" in results
     assert results["overall_score"] > 0
     assert results["grade"] in ["A", "B", "C", "D", "F"]
+
 
 def test_agent_roles():
     crew = ContentGenerationCrew()
